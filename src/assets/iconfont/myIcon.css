@@ -1,0 +1,15 @@
+@font-face {
+    font-family: 'custom-iconfont';
+    src: url('./iconfont.ttf') format('truetype');
+  }
+  
+  .van-icon {
+    font-family: 'vant-icon', 'custom-iconfont' !important;
+  }
+  
+  .van-icon-shouji:before {
+    content: '\e622';
+  }
+  .van-icon-yanzhengma:before {
+    content: '\e604';
+  }

@@ -1,29 +1,35 @@
 <template>
   <div id="app">
-    <department-tree></department-tree>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import departmentTree from '@/components/department-tree';
 export default {
   name: "app",
   data() {
     return {
-      
-    };
+
+    }
   },
   components: {
-departmentTree
+
   },
-  
 
   methods: {
+    
+  },
+  mounted() {
     
   }
 };
 </script>
 
 <style lang="less">
-  
+  #app {
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+}
 </style>
