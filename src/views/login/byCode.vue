@@ -1,67 +1,68 @@
 <template>
-    <div id="login">
-        <div class="title">
-            <h3>SenseKeeper</h3>
-            <p>用户系统</p>
-        </div>
-        <van-cell-group>
-            <van-field v-model="phone" left-icon="shouji" :placeholder="errorMsg.phone" :error="errorPhone" clearable @input="checkPhone" />
-            <van-field v-model="sms" left-icon="yanzhengma" center clearable :placeholder="errorMsg.sms" :error="errorSms" @input="checkSms">
-                <van-button slot="button" size="small" type="primary" @click="sendSms" :disabled="disabledSms">{{sendSmsTxt}}</van-button>
-            </van-field>
-        </van-cell-group>
-        <van-button size="large" type="primary" round :disabled="disabledLogin" @click="login" :loading="loading">登录</van-button>
+  <div id="login">
+    <div class="title">
+      <h3>SenseKeeper</h3>
+      <p>用户系统</p>
     </div>
+    <van-cell-group>
+      <!-- <van-field v-model="phone" left-icon="shouji" :placeholder="errorMsg.phone" :error="errorPhone" clearable @input="checkPhone" /> -->
+      <van-field :value="userLogin.phone" left-icon="shouji" disabled />
+      <van-field v-model="sms" left-icon="yanzhengma" center clearable placeholder="请输入短信验证码" @input="checkSms">
+        <van-button slot="button" size="small" type="primary" @click="sendSms" :disabled="disabledSms">{{sendSmsTxt}}</van-button>
+      </van-field>
+    </van-cell-group>
+    <van-button size="large" type="primary" round :disabled="disabledLogin" @click="login" :loading="loading">登录</van-button>
+  </div>
 </template>
 <script>
 export default {
   name: "app",
   data() {
     return {
-      phone: "",
       sms: "",
       sendSmsTxt: "发送验证码",
       countDown: 60,
-      errorPhone: false,
-      errorSms: false,
-      disabledSms: true,
+      disabledSms: false,
       disabledLogin: true,
-      errorMsg: {
-        phone: "请输入手机号",
-        sms: "请输入短信验证码"
-      },
-      checkLogin: {
-        phone: "12345678",
-        sms: "1234"
-      },
-      loading: false
+      loading: false,
+      userLogin: {
+        id: 0,
+        companyId: 0,
+        isRegister: 0,
+        isAdmin: null,
+        phone: "",
+        token: ""
+      }
     };
   },
-  created() {},
+  created() {
+    this.userLogin = JSON.parse(localStorage.userLogin);
+  },
   mounted() {},
   methods: {
-    checkPhone() {
-      let reg = /(^[0-9]{8}$)|(^[0-9]{10}$)|(^[0-9]{11}$)/;
-      if (this.phone != "") {
-        this.errorPhone = false;
-        if (reg.test(this.phone)) {
-          this.disabledSms = false;
-          this.disabledLogin = false;
-        } else {
-          this.disabledSms = true;
-          this.disabledLogin = true;
-        }
-      }
-    },
     checkSms() {
-      if (this.sms != "") {
-        this.errorSms = false;
-        this.errorMsg.sms = "请输入短信验证码";
+      if (this.sms) {
+        this.disabledLogin = false;
+      } else {
+        this.disabledLogin = true;
       }
     },
     sendSms() {
       this.disabledSms = true;
-      let timeId = setInterval(() => {
+      // 请求验证码
+      this.$axios
+        .get(`/h5/getCode?mobile=${this.userLogin.phone}`)
+        .then(res => {
+          if (res.data.code === 0) {
+            // 拿到验证码
+          } else {
+            this.$toast.fail(res.data.desc);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+        let timeId = setInterval(() => {
         this.countDown--;
         this.sendSmsTxt = "重新发送(" + this.countDown + ")";
         if (this.countDown <= 0) {
@@ -71,8 +72,6 @@ export default {
           this.disabledSms = false;
         }
       }, 1000);
-      // 请求验证码
-      //   this.$axios.post();
     },
     login() {
       this.loading = true;
@@ -81,29 +80,33 @@ export default {
         this.loading = false;
         return;
       }
-      if (
-        this.phone != this.checkLogin.phone ||
-        this.sms != this.checkLogin.sms
-      ) {
-        this.sms = "";
-        this.errorMsg.sms = "验证码错误";
-        this.errorSms = true;
-        this.loading = false;
-        return;
-      }
+      // 验证验证码
 
-      setTimeout(() => {
-      // 验证通过
-      this.loading = false;
-      this.$toast.success({
-          message: "登录成功",
-          duration: 200
-      });
-        
-      }, 500);
-      setTimeout(()=>{
-          this.$router.push("/person");
-      },1000)
+      this.$axios
+        .get(
+          `/h5/checkCode?mobile=${this.userLogin.phone}&sms=${
+            this.sms
+          }`
+        )
+        .then(res => {
+          this.loading = false;
+          console.log(res);
+          if (res.data.code === 0) {
+            this.$toast.success({
+              message: "验证通过",
+              duration: 200
+            });
+            // 员工信息界面
+            this.$router.push("/person");
+          } else {
+            this.$toast(res.data.desc);
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          console.log(err);
+          this.$toast.fail('服务器繁忙');
+        });
     }
   }
 };
@@ -112,7 +115,7 @@ export default {
 <style lang="less" scoped>
 #login {
   .title {
-    padding: 50px 0;
+    padding: 30px 0;
   }
   .van-cell-group {
     padding: 0 20px;
