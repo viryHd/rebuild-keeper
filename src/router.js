@@ -65,13 +65,6 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
     document.title = to.meta.title;
-    if (to.meta.auth && !localStorage.userLogin) {
-        router.push('/login')
-        next(false)
-    } else if (to.meta.authLogin && !localStorage.userInfo && !from.meta.auth) {
-        router.push('/login')
-        next(false)
-    }
     next()
 })
 export default router

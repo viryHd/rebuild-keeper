@@ -1,10 +1,11 @@
 <template>
   <div id="record">
     <van-nav-bar title="打卡记录" left-text="返回" right-text="选择" left-arrow @click-left="onClickBack" @click-right="selectDateButton" />
-    <van-popup v-model="dataSelectorShow" position="bottom">
-      <van-datetime-picker v-model="currentDate" type="date" :min-date="minDate" :max-date="maxDate" @confirm="confirm" @cancel="cancel" />
+    <van-popup v-model="dataSelectorShow" position="bottom" :close-on-click-overlay="false">
+      <van-datetime-picker v-model="currentDate" type="date" :min-date="minDate" :max-date="maxDate"
+      :visible-item-count="5" @confirm="confirm" @cancel="cancel" />
     </van-popup>
-    <template v-if="staffSignData.length">
+    <div v-if="staffSignData.length">
     <div v-for="(item,index) in staffSignData" :key="index">
       <van-cell-group>
         <div class="image">
@@ -24,9 +25,10 @@
         </div>
       </van-cell-group>
     </div>
-    </template>
-    <div v-else>
-      <h3>今日未打卡 !</h3>
+    </div>
+    <div v-if="!staffSignData.length">
+      <h3 style="background-color:#f6f6f6; margin:0;padding:20px 0;">今日未打卡 !</h3>
+      <img style="width:100%" src="../../assets/images/error.jpg" />
     </div>
   </div>
 </template>
@@ -70,7 +72,6 @@
       },
       cancel() {
         this.dataSelectorShow = false;
-        this.currentDate = new Date();
       },
       getRecord() {
         this.formatDate(this.currentDate);

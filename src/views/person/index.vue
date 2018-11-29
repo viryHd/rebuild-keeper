@@ -11,8 +11,14 @@
       class="image"
       @click="cameraShow=true"
     >
-      <img v-if="avatar" :src="$root.baseUrl+avatar" />
-      <img v-else src="../../assets/images/error.jpg" />
+      <img
+        v-if="avatar"
+        :src="avatar"
+      />
+      <img
+        v-else
+        src="../../assets/images/error.jpg"
+      />
     </div>
     <van-cell-group>
       <van-field
@@ -64,25 +70,43 @@
     <van-button
       type="primary"
       size="large"
-      @click="editStaff"
+      @click="editSaveStaff"
     >保存</van-button>
-    <van-popup v-model="cameraShow">
-    <active-camera @upload="upload" :cameraShow="cameraShow">
-      <div slot="title">
-      </div>
-    </active-camera>
+    <van-popup v-model="cameraShow" class="van-popup-camera">
+      <p class="cancel">
+        <span
+          class="cancel-btn"
+          @click="cameraShow=false"
+        >取消操作</span>
+      </p>
+      <active-camera
+        @upload="upload"
+        :cameraShow="cameraShow"
+      >
+        <div slot="title">
+        </div>
+      </active-camera>
+    </van-popup>
+    <van-popup
+      v-model="loading"
+      :close-on-click-overlay="false"
+    >
+      <van-loading
+        type="spinner"
+        color="white"
+      />
     </van-popup>
   </div>
 </template>
 
 <script>
 import cryptoDES from "@/lib/cryptoDES";
-import activeCamera from "@/components/activeCamera"
+import activeCamera from "@/components/activeCamera";
 export default {
   data() {
     return {
       avatar: "",
-      cameraShow:false,
+      cameraShow: false,
       idNumber: "",
       staffInfo: {
         userId: "",
@@ -97,7 +121,8 @@ export default {
         remark: "",
         isRegister: 0,
         companyId: ""
-      }
+      },
+      loading: false
     };
   },
   mounted() {
@@ -117,8 +142,7 @@ export default {
       .then(response => {
         if (response.data.code === 0) {
           var result = response.data.data;
-          console.log('qwrfqwrfqw',result);
-          this.avatar = result.avatar;
+          this.avatar = this.$root.baseUrl + result.avatar;
           this.staffInfo.id = result.id;
           this.staffInfo.name = result.name;
           this.staffInfo.icNumber = result.icNumber;
@@ -134,7 +158,7 @@ export default {
       })
       .catch(err => {
         console.log(err);
-        this.$toast.fail("服务器繁忙");
+        this.$toast.fail("获取失败");
       });
   },
   methods: {
@@ -149,7 +173,8 @@ export default {
     //   this.avatar = file.content;
     //   this.staffInfo.avatar = file.file;
     // },
-    editStaff() {
+    editSaveStaff() {
+      this.loading = true;
       this.idNumber = cryptoDES.encodeData(this.staffInfo.idNumber);
       let dataForm = new FormData();
       dataForm.append("avatarFile", this.staffInfo.avatar);
@@ -173,6 +198,7 @@ export default {
         }
       })
         .then(response => {
+          this.loading = false;
           if (response.data.code === 0) {
             this.$toast.success("保存成功");
             localStorage.setItem("staffInfo", JSON.stringify(this.staffInfo));
@@ -181,6 +207,7 @@ export default {
           }
         })
         .catch(err => {
+          this.loading = false;
           this.$toast.fail("服务器繁忙");
         });
     },
@@ -191,43 +218,57 @@ export default {
     onClickRight() {
       this.$router.push("/record");
     },
-    upload(imgInfo,bool){
+    upload(imgInfo, bool) {
       this.avatar = imgInfo.imgData;
       this.staffInfo.avatar = imgInfo.avatarfile;
       this.cameraShow = bool;
     }
   },
-  components:{
+  components: {
     activeCamera
   }
 };
 </script>
 
 <style lang="less">
-#person{
-.image {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  box-shadow: 0px 0px 10px 5px pink;
-  margin: 20px auto;
-  overflow: hidden;
-  img {
-    width: 100%;
+#person {
+  .image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    box-shadow: 0px 0px 10px 5px pink;
+    margin: 20px auto;
+    overflow: hidden;
+    img {
+      width: 100%;
+    }
   }
-}
 
-.van-cell-group {
-  padding: 0 20px;
-}
-.van-popup{
-  width: 100%;
-  height: 100%;
-  background-color: transparent;
-  #camera{
-    margin-top: 65px;
+  .van-cell-group {
+    padding: 0 20px;
   }
-}
+  .van-popup-camera {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    .cancel {
+      color: #44bb00;
+      padding: 15px 15px 0 0;
+      text-align: right;
+      .cancel-btn {
+        display: inline-block;
+        padding: 10px;
+        box-shadow: 0px 0px 00px 1px #44bb00;
+        border-radius: 6px;
+      }
+    }
+    #camera {
+      margin-top: 50px;
+    }
+  }
+  .van-loading {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
 }
 </style>
 

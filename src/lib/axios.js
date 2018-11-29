@@ -13,7 +13,7 @@ import store from "@/store"
 
 // 请求、响应拦截器
 axios.interceptors.request.use((config) => {
-  if(localStorage.userLogin){
+  if (localStorage.userLogin) {
     window.user = JSON.parse(localStorage.userLogin)
   }
   console.log(config);
@@ -45,7 +45,9 @@ axios.interceptors.request.use((config) => {
     }
     config.data.forEach((value, key) => {
       if (!key.match(/\[/) && typeof (value) !== 'object') {
-        arr.push(key + '=' + value)
+        if (key != 'avatarFile') {
+          arr.push(key + '=' + value)
+        }
       }
     })
     if (config.method !== 'post') {
@@ -56,6 +58,7 @@ axios.interceptors.request.use((config) => {
     arr.push('timestamp=' + timestamp)
     console.log(arr.sort().join('&') + '#' + KEY)
     config.data.append('sign', CryptoJS.MD5(arr.sort().join('&') + '#' + KEY))
+
   }
   return config
 }, (error) => {
